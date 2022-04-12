@@ -165,4 +165,155 @@ class VatCalculatorTest extends KernelTestCase
         $this->expectException(LogicException::class);
         $vatCalculator->calculatePriceHTWithVat($price, $vat);
     }
+
+    /**
+     * @return void
+     */
+    public function testCalculateVat(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $toTestValues = [
+            [
+                'priceHT'  => 10,
+                'priceTTC' => 12,
+                'result'   => 20.00
+            ],
+            [
+                'priceHT'  => 100,
+                'priceTTC' => 105.5,
+                'result'   => 5.5
+            ],
+        ];
+
+        foreach ($toTestValues as $toTestValue) {
+
+            $newPrice = $vatCalculator->calculateVat($toTestValue['priceHT'], $toTestValue['priceTTC']);
+
+            $this->assertEquals($toTestValue['result'], $newPrice);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateVatHTNull(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $priceHT = null;
+        $priceTTC = 12;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateVat($priceHT, $priceTTC);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateVatTTCNull(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $priceHT  = 12;
+        $priceTTC = null;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateVat($priceHT, $priceTTC);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateVatTTCEqualZero(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $priceHT  = 12;
+        $priceTTC = 0;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateVat($priceHT, $priceTTC);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateHTFromTTCAndVat(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $priceTTC = 12.00;
+        $vat      = 20.00;
+
+        $priceHT = $vatCalculator->calculateHTFromTTCAndVat($priceTTC, $vat);
+
+        $this->assertEquals(10.00, $priceHT);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateHTFromTTCAndVatWithNullPrice(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $priceTTC = null;
+        $vat      = 20.00;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateHTFromTTCAndVat($priceTTC, $vat);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateHTFromTTCAndVatWithNullVat(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $vat      = null;
+        $priceTTC = 20.00;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateHTFromTTCAndVat($priceTTC, $vat);
+    }
+
+    /**
+     * @return void
+     */
+    public function testCalculateHTFromTTCAndVatWithVatEqualZero(): void
+    {
+        self::bootKernel();
+
+        $vatCalculator = self::$kernel->getContainer()
+            ->get('test.'.VatCalculatorServices::class);
+
+        $vat      = 0;
+        $priceTTC = 20.00;
+
+        $this->expectException(LogicException::class);
+        $vatCalculator->calculateHTFromTTCAndVat($priceTTC, $vat);
+    }
 }

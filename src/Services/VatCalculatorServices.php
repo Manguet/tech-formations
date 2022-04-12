@@ -50,11 +50,11 @@ class VatCalculatorServices
      * Service to calculate TVA.
      *
      * @param float|null $priceHT
-     * @param float $priceTTC
+     * @param float|null $priceTTC
      *
      * @return float
      */
-    public function calculateVat(?float $priceHT, float $priceTTC): float
+    public function calculateVat(?float $priceHT, ?float $priceTTC): float
     {
         $this->checkNotNullableValue->isOK($priceHT);
         $this->checkNotNullableValue->isOK($priceTTC);
@@ -66,6 +66,24 @@ class VatCalculatorServices
             );
         }
 
-        return $priceTTC - $priceHT;
+        return (($priceTTC / $priceHT) - 1) * 100;
+    }
+
+    /**
+     * @param null|float $priceTTC
+     * @param null|float $vat
+     *
+     * @return float
+     */
+    public function calculateHTFromTTCAndVat(?float $priceTTC, ?float $vat): float
+    {
+        $this->checkNotNullableValue->isOK($priceTTC);
+        $this->checkNotNullableValue->isOK($vat);
+
+        if ($vat === 0.00) {
+            throw new LogicException('A price could not be negative or equal to 0', 400);
+        }
+
+        return ($priceTTC / (1 + ($vat / 100)));
     }
 }
